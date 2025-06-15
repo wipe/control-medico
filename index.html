@@ -352,8 +352,8 @@
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label for="duracion">Duración (minutos)</label>
-                                <input type="number" id="duracion" step="0.1" min="0" required>
+                                <label for="duracion">Duración (mm:ss)</label>
+                                <input type="text" id="duracion" placeholder="05:30" pattern="^[0-9]{1,2}:[0-5][0-9]$" title="Formato: minutos:segundos (ej: 05:30)" required>
                             </div>
                             <div class="form-group">
                                 <label for="hora-convulsion">Hora</label>
@@ -472,10 +472,18 @@
         document.getElementById('form-convulsion').addEventListener('submit', function(e) {
             e.preventDefault();
             
+            const duracionInput = document.getElementById('duracion').value;
+            
+            // Validar formato mm:ss
+            if (!/^[0-9]{1,2}:[0-5][0-9]$/.test(duracionInput)) {
+                alert('Por favor ingresa la duración en formato mm:ss (ejemplo: 05:30)');
+                return;
+            }
+            
             const registro = {
                 tipo: 'convulsion',
                 tipoConvulsion: document.getElementById('tipo-convulsion').value,
-                duracion: document.getElementById('duracion').value,
+                duracion: duracionInput,
                 fecha: document.getElementById('fecha-convulsion').value,
                 hora: document.getElementById('hora-convulsion').value,
                 descripcion: document.getElementById('descripcion').value,
@@ -552,7 +560,7 @@
                         <div class="registro-item convulsion">
                             <div class="registro-fecha">${formatearFecha(registro.fecha)} - ${registro.hora}</div>
                             <div class="registro-info">
-                                <strong>Convulsión ${registro.tipoConvulsion}</strong> - Duración: ${registro.duracion} min
+                                <strong>Convulsión ${registro.tipoConvulsion}</strong> - Duración: ${registro.duracion}
                                 <br>${registro.descripcion}
                             </div>
                             <span class="registro-tipo ${registro.tipoConvulsion}">${registro.tipoConvulsion.charAt(0).toUpperCase() + registro.tipoConvulsion.slice(1)}</span>
