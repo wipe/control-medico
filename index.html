@@ -731,7 +731,8 @@
             localStorage.setItem('registros-medicos', JSON.stringify(registros));
         }
 
-        // Inicializar fechas actuales        document.addEventListener('DOMContentLoaded', function() {
+        // Inicializar fechas actuales        
+        document.addEventListener('DOMContentLoaded', function() {
             const hoy = new Date().toISOString().split('T')[0];
             const ahora = new Date().toTimeString().split(' ')[0].substring(0, 5);
             
@@ -1365,7 +1366,8 @@
         window.firebaseDB = db;
         window.firebaseCollections = { collection, addDoc, getDocs, orderBy, query, serverTimestamp };
 
-        // Cargar datos desde Firestore al inicializar        window.addEventListener('load', function() {
+        // Cargar datos desde Firestore al inicializar        
+        window.addEventListener('load', function() {
             cargarRegistrosDesdeFirestore();
             cargarInventarioDesdeFirestore();
         });
