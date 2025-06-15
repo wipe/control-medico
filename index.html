@@ -487,23 +487,239 @@
                 flex-direction: column;
                 align-items: flex-start;
                 gap: 10px;
-            }
-
-            .inventario-acciones {
+            }            .inventario-acciones {
                 flex-direction: column;
             }
+        }
+
+        /* Estilos para autenticación */
+        .auth-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .auth-container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            max-width: 400px;
+            width: 90%;
+            animation: fadeInScale 0.3s ease;
+        }
+
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .auth-header h2 {
+            color: #4facfe;
+            margin-bottom: 10px;
+            font-size: 1.8rem;
+        }
+
+        .auth-header p {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 30px;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid #e9ecef;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            background: #f8f9fa;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .auth-tab.active {
+            background: #4facfe;
+            color: white;
+        }
+
+        .auth-form {
+            display: none;
+        }
+
+        .auth-form.active {
+            display: block;
+        }
+
+        .auth-form-group {
+            margin-bottom: 20px;
+        }
+
+        .auth-form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .auth-form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .auth-form-group input:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+        }
+
+        .auth-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
+        }
+
+        .auth-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(79, 172, 254, 0.4);
+        }
+
+        .auth-error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.3);
+            border: none;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        .hidden {
+            display: none !important;
         }
     </style>
 </head>
 <body>
+    <!-- Pantalla de autenticación -->
+    <div id="auth-overlay" class="auth-overlay">
+        <div class="auth-container">
+            <div class="auth-header">
+                <h2>🔐 Control Médico Seguro</h2>
+                <p>Inicia sesión para acceder a tus registros médicos</p>
+            </div>
+            
+            <div class="auth-tabs">
+                <button class="auth-tab active" onclick="showAuthTab('login')">Iniciar Sesión</button>
+                <button class="auth-tab" onclick="showAuthTab('register')">Registrarse</button>
+            </div>
+
+            <div id="auth-error" class="auth-error hidden"></div>
+
+            <!-- Formulario de Login -->
+            <form id="login-form" class="auth-form active">
+                <div class="auth-form-group">
+                    <label for="login-email">Correo Electrónico</label>
+                    <input type="email" id="login-email" required>
+                </div>
+                <div class="auth-form-group">
+                    <label for="login-password">Contraseña</label>
+                    <input type="password" id="login-password" required>
+                </div>
+                <button type="submit" class="auth-btn">Iniciar Sesión</button>
+            </form>
+
+            <!-- Formulario de Registro -->
+            <form id="register-form" class="auth-form">
+                <div class="auth-form-group">
+                    <label for="register-email">Correo Electrónico</label>
+                    <input type="email" id="register-email" required>
+                </div>
+                <div class="auth-form-group">
+                    <label for="register-password">Contraseña</label>
+                    <input type="password" id="register-password" minlength="6" required>
+                </div>
+                <div class="auth-form-group">
+                    <label for="register-password-confirm">Confirmar Contraseña</label>
+                    <input type="password" id="register-password-confirm" minlength="6" required>
+                </div>
+                <button type="submit" class="auth-btn">Crear Cuenta</button>
+            </form>
+        </div>
+    </div>
+
     <div class="container">        <div class="header">
             <div class="connection-status" id="connection-status">
                 <div class="status-indicator offline" id="status-indicator"></div>
                 <span id="status-text">Offline</span>
             </div>
+            <div class="user-info hidden" id="user-info">
+                <span id="user-email"></span>
+                <button class="logout-btn" onclick="logout()">Cerrar Sesión</button>
+            </div>
             <h1>Control Médico</h1>
             <p>Registro de medicamentos y convulsiones</p>
-        </div>        <div class="tabs">
+        </div><div class="tabs">
             <button class="tab active" onclick="showTab('medicamentos')">💊 Medicamentos</button>
             <button class="tab" onclick="showTab('convulsiones')">⚡ Convulsiones</button>
             <button class="tab" onclick="showTab('inventario')">📦 Inventario</button>
@@ -695,10 +911,132 @@
                 </div>
             </div>
         </div>
-    </div>    <script>
-        // Datos almacenados en memoria
+    </div>    <script>        // Datos almacenados en memoria
         let registros = [];
         let inventario = [];
+        let currentUser = null;
+
+        // === FUNCIONES DE AUTENTICACIÓN ===
+
+        // Función para mostrar/ocultar pestañas de autenticación
+        function showAuthTab(tabName) {
+            // Ocultar todos los formularios
+            document.querySelectorAll('.auth-form').forEach(form => {
+                form.classList.remove('active');
+            });
+            
+            // Remover clase active de todos los tabs
+            document.querySelectorAll('.auth-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Mostrar el formulario seleccionado
+            document.getElementById(tabName + '-form').classList.add('active');
+            
+            // Activar el tab clickeado
+            event.target.classList.add('active');
+            
+            // Limpiar errores
+            hideAuthError();
+        }
+
+        // Función para mostrar errores de autenticación
+        function showAuthError(message) {
+            const errorDiv = document.getElementById('auth-error');
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+        }
+
+        // Función para ocultar errores de autenticación
+        function hideAuthError() {
+            const errorDiv = document.getElementById('auth-error');
+            errorDiv.classList.add('hidden');
+        }
+
+        // Función para mostrar la aplicación principal
+        function showMainApp() {
+            document.getElementById('auth-overlay').classList.add('hidden');
+            document.getElementById('user-info').classList.remove('hidden');
+            document.getElementById('user-email').textContent = currentUser.email;
+        }
+
+        // Función para mostrar la pantalla de login
+        function showLoginScreen() {
+            document.getElementById('auth-overlay').classList.remove('hidden');
+            document.getElementById('user-info').classList.add('hidden');
+        }
+
+        // Función de registro
+        async function register(email, password, confirmPassword) {
+            if (password !== confirmPassword) {
+                showAuthError('Las contraseñas no coinciden');
+                return;
+            }
+
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                console.log('Usuario registrado:', userCredential.user.email);
+                hideAuthError();
+            } catch (error) {
+                console.error('Error en registro:', error);
+                showAuthError(getAuthErrorMessage(error.code));
+            }
+        }
+
+        // Función de inicio de sesión
+        async function login(email, password) {
+            try {
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                console.log('Usuario autenticado:', userCredential.user.email);
+                hideAuthError();
+            } catch (error) {
+                console.error('Error en login:', error);
+                showAuthError(getAuthErrorMessage(error.code));
+            }
+        }
+
+        // Función de cierre de sesión
+        async function logout() {
+            try {
+                await signOut(auth);
+                console.log('Usuario desconectado');
+            } catch (error) {
+                console.error('Error al cerrar sesión:', error);
+            }
+        }
+
+        // Función para obtener mensajes de error en español
+        function getAuthErrorMessage(errorCode) {
+            const errorMessages = {
+                'auth/user-not-found': 'No existe una cuenta con este correo electrónico',
+                'auth/wrong-password': 'Contraseña incorrecta',
+                'auth/email-already-in-use': 'Ya existe una cuenta con este correo electrónico',
+                'auth/weak-password': 'La contraseña debe tener al menos 6 caracteres',
+                'auth/invalid-email': 'Correo electrónico inválido',
+                'auth/too-many-requests': 'Demasiados intentos fallidos. Intenta más tarde',
+                'auth/network-request-failed': 'Error de conexión. Verifica tu internet'
+            };
+            
+            return errorMessages[errorCode] || 'Error de autenticación: ' + errorCode;
+        }
+
+        // Event listeners para formularios de autenticación
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            await login(email, password);
+        });
+
+        document.getElementById('register-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+            const confirmPassword = document.getElementById('register-password-confirm').value;
+            await register(email, password, confirmPassword);
+        });
+
+        // === FIN FUNCIONES DE AUTENTICACIÓN ===
 
         // Función para actualizar el estado de conexión
         function actualizarEstadoConexion(conectado) {
@@ -1336,8 +1674,15 @@
         }    </script>
 
     <!-- Firebase SDK -->
-    <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';        import { 
+    <script type="module">        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { 
+            getAuth, 
+            signInWithEmailAndPassword, 
+            createUserWithEmailAndPassword, 
+            signOut, 
+            onAuthStateChanged 
+        } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { 
             getFirestore, 
             collection, 
             addDoc, 
@@ -1356,26 +1701,47 @@
             messagingSenderId: "753860626642",
             appId: "1:753860626642:web:a7a9ecc3ef927cd72c050b",
             measurementId: "G-55J089K2WR"
-        };
-
-        // Inicializar Firebase
+        };        // Inicializar Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-
-        // Hacer las funciones de Firebase disponibles globalmente
+        const auth = getAuth(app);        // Hacer las funciones de Firebase disponibles globalmente
         window.firebaseDB = db;
+        window.firebaseAuth = auth;
         window.firebaseCollections = { collection, addDoc, getDocs, orderBy, query, serverTimestamp };
+
+        // Listener para cambios en el estado de autenticación
+        onAuthStateChanged(auth, (user) => {
+            currentUser = user;
+            if (user) {
+                console.log('Usuario autenticado:', user.email);
+                showMainApp();
+                // Cargar datos del usuario
+                cargarRegistrosDesdeFirestore();
+                cargarInventarioDesdeFirestore();
+            } else {
+                console.log('Usuario no autenticado');
+                showLoginScreen();
+                // Limpiar datos al cerrar sesión
+                registros = [];
+                inventario = [];
+                actualizarHistorial();
+                actualizarInventario();
+            }
+        });
 
         // Cargar datos desde Firestore al inicializar        
         window.addEventListener('load', function() {
-            cargarRegistrosDesdeFirestore();
-            cargarInventarioDesdeFirestore();
-        });
-
-        // Función para cargar registros desde Firestore
+            // Los datos se cargarán automáticamente cuando el usuario se autentique
+        });        // Función para cargar registros desde Firestore
         async function cargarRegistrosDesdeFirestore() {
+            if (!currentUser) {
+                console.log('Usuario no autenticado, no se pueden cargar registros');
+                return;
+            }
+
             try {
-                const q = query(collection(db, 'registros-medicos'), orderBy('timestamp', 'desc'));
+                const userCollection = `usuarios/${currentUser.uid}/registros-medicos`;
+                const q = query(collection(db, userCollection), orderBy('timestamp', 'desc'));
                 const querySnapshot = await getDocs(q);
                 
                 registros = [];
@@ -1388,7 +1754,7 @@
                     registros.push({ id: doc.id, ...data });
                 });
                 
-                console.log(`Cargados ${registros.length} registros desde Firestore`);
+                console.log(`Cargados ${registros.length} registros desde Firestore para ${currentUser.email}`);
                 actualizarEstadoConexion(true);
                 actualizarHistorial();
                 actualizarEstadisticas();
@@ -1400,9 +1766,14 @@
             }
         }        // Función para guardar inventario en Firestore
         async function guardarInventarioEnFirestore(inventarioData) {
+            if (!currentUser) {
+                throw new Error('Usuario no autenticado');
+            }
+
             try {
-                // Eliminar todos los documentos existentes del inventario
-                const inventarioRef = collection(db, 'inventario-medico');
+                // Eliminar todos los documentos existentes del inventario del usuario
+                const userCollection = `usuarios/${currentUser.uid}/inventario-medico`;
+                const inventarioRef = collection(db, userCollection);
                 const querySnapshot = await getDocs(inventarioRef);
                 const deletePromises = querySnapshot.docs.map(doc => deleteDoc(doc.ref));
                 await Promise.all(deletePromises);
@@ -1411,22 +1782,27 @@
                 const savePromises = inventarioData.map(medicamento => 
                     addDoc(inventarioRef, {
                         ...medicamento,
-                        timestamp: serverTimestamp()
+                        timestamp: serverTimestamp(),
+                        userId: currentUser.uid
                     })
                 );
                 await Promise.all(savePromises);
                 
-                console.log('Inventario guardado en Firestore');
+                console.log('Inventario guardado en Firestore para', currentUser.email);
             } catch (error) {
                 console.error('Error guardando inventario en Firestore:', error);
                 throw error;
             }
-        }
-
-        // Función para cargar inventario desde Firestore
+        }// Función para cargar inventario desde Firestore
         async function cargarInventarioDesdeFirestore() {
+            if (!currentUser) {
+                console.log('Usuario no autenticado, no se puede cargar inventario');
+                return;
+            }
+
             try {
-                const querySnapshot = await getDocs(collection(db, 'inventario-medico'));
+                const userCollection = `usuarios/${currentUser.uid}/inventario-medico`;
+                const querySnapshot = await getDocs(collection(db, userCollection));
                 const inventarioFirestore = [];
                 
                 querySnapshot.forEach((doc) => {
@@ -1438,21 +1814,25 @@
                 });
                 
                 inventario = inventarioFirestore;
-                console.log(`Cargados ${inventario.length} medicamentos del inventario desde Firestore`);
+                console.log(`Cargados ${inventario.length} medicamentos del inventario desde Firestore para ${currentUser.email}`);
                 actualizarInventario();
             } catch (error) {
                 console.error('Error cargando inventario desde Firestore:', error);
                 // Respaldo en localStorage
                 cargarInventario();
             }
-        }
-
-        // Función para guardar registro en Firestore
+        }        // Función para guardar registro en Firestore
         async function guardarRegistroEnFirestore(registro) {
+            if (!currentUser) {
+                throw new Error('Usuario no autenticado');
+            }
+
             try {
-                const docRef = await addDoc(collection(db, 'registros-medicos'), {
+                const userCollection = `usuarios/${currentUser.uid}/registros-medicos`;
+                const docRef = await addDoc(collection(db, userCollection), {
                     ...registro,
-                    timestamp: serverTimestamp()
+                    timestamp: serverTimestamp(),
+                    userId: currentUser.uid
                 });
                 console.log('Registro guardado en Firestore con ID:', docRef.id);
                 return docRef.id;
@@ -1462,7 +1842,7 @@
                 guardarEnLocalStorage(registro);
                 throw error;
             }
-        }        // Hacer funciones disponibles globalmente
+        }// Hacer funciones disponibles globalmente
         window.cargarRegistrosDesdeFirestore = cargarRegistrosDesdeFirestore;
         window.guardarRegistroEnFirestore = guardarRegistroEnFirestore;
         window.guardarInventarioEnFirestore = guardarInventarioEnFirestore;
