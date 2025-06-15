@@ -912,131 +912,7 @@
             </div>
         </div>
     </div>    <script>        // Datos almacenados en memoria
-        let registros = [];
-        let inventario = [];
-        let currentUser = null;
-
-        // === FUNCIONES DE AUTENTICACIÓN ===
-
-        // Función para mostrar/ocultar pestañas de autenticación
-        function showAuthTab(tabName) {
-            // Ocultar todos los formularios
-            document.querySelectorAll('.auth-form').forEach(form => {
-                form.classList.remove('active');
-            });
-            
-            // Remover clase active de todos los tabs
-            document.querySelectorAll('.auth-tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            
-            // Mostrar el formulario seleccionado
-            document.getElementById(tabName + '-form').classList.add('active');
-            
-            // Activar el tab clickeado
-            event.target.classList.add('active');
-            
-            // Limpiar errores
-            hideAuthError();
-        }
-
-        // Función para mostrar errores de autenticación
-        function showAuthError(message) {
-            const errorDiv = document.getElementById('auth-error');
-            errorDiv.textContent = message;
-            errorDiv.classList.remove('hidden');
-        }
-
-        // Función para ocultar errores de autenticación
-        function hideAuthError() {
-            const errorDiv = document.getElementById('auth-error');
-            errorDiv.classList.add('hidden');
-        }
-
-        // Función para mostrar la aplicación principal
-        function showMainApp() {
-            document.getElementById('auth-overlay').classList.add('hidden');
-            document.getElementById('user-info').classList.remove('hidden');
-            document.getElementById('user-email').textContent = currentUser.email;
-        }
-
-        // Función para mostrar la pantalla de login
-        function showLoginScreen() {
-            document.getElementById('auth-overlay').classList.remove('hidden');
-            document.getElementById('user-info').classList.add('hidden');
-        }
-
-        // Función de registro
-        async function register(email, password, confirmPassword) {
-            if (password !== confirmPassword) {
-                showAuthError('Las contraseñas no coinciden');
-                return;
-            }
-
-            try {
-                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                console.log('Usuario registrado:', userCredential.user.email);
-                hideAuthError();
-            } catch (error) {
-                console.error('Error en registro:', error);
-                showAuthError(getAuthErrorMessage(error.code));
-            }
-        }
-
-        // Función de inicio de sesión
-        async function login(email, password) {
-            try {
-                const userCredential = await signInWithEmailAndPassword(auth, email, password);
-                console.log('Usuario autenticado:', userCredential.user.email);
-                hideAuthError();
-            } catch (error) {
-                console.error('Error en login:', error);
-                showAuthError(getAuthErrorMessage(error.code));
-            }
-        }
-
-        // Función de cierre de sesión
-        async function logout() {
-            try {
-                await signOut(auth);
-                console.log('Usuario desconectado');
-            } catch (error) {
-                console.error('Error al cerrar sesión:', error);
-            }
-        }
-
-        // Función para obtener mensajes de error en español
-        function getAuthErrorMessage(errorCode) {
-            const errorMessages = {
-                'auth/user-not-found': 'No existe una cuenta con este correo electrónico',
-                'auth/wrong-password': 'Contraseña incorrecta',
-                'auth/email-already-in-use': 'Ya existe una cuenta con este correo electrónico',
-                'auth/weak-password': 'La contraseña debe tener al menos 6 caracteres',
-                'auth/invalid-email': 'Correo electrónico inválido',
-                'auth/too-many-requests': 'Demasiados intentos fallidos. Intenta más tarde',
-                'auth/network-request-failed': 'Error de conexión. Verifica tu internet'
-            };
-            
-            return errorMessages[errorCode] || 'Error de autenticación: ' + errorCode;
-        }
-
-        // Event listeners para formularios de autenticación
-        document.getElementById('login-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('login-email').value;
-            const password = document.getElementById('login-password').value;
-            await login(email, password);
-        });
-
-        document.getElementById('register-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('register-email').value;
-            const password = document.getElementById('register-password').value;
-            const confirmPassword = document.getElementById('register-password-confirm').value;
-            await register(email, password, confirmPassword);
-        });
-
-        // === FIN FUNCIONES DE AUTENTICACIÓN ===
+        let registros = [];        let inventario = [];
 
         // Función para actualizar el estado de conexión
         function actualizarEstadoConexion(conectado) {
@@ -1704,10 +1580,22 @@
         };        // Inicializar Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        const auth = getAuth(app);        // Hacer las funciones de Firebase disponibles globalmente
+        const auth = getAuth(app);
+        
+        // Variable para el usuario actual
+        let currentUser = null;        // Hacer las funciones de Firebase disponibles globalmente
         window.firebaseDB = db;
         window.firebaseAuth = auth;
         window.firebaseCollections = { collection, addDoc, getDocs, orderBy, query, serverTimestamp };
+        window.firebaseAuthFunctions = { 
+            signInWithEmailAndPassword, 
+            createUserWithEmailAndPassword, 
+            signOut, 
+            onAuthStateChanged 
+        };
+        
+        // Hacer currentUser disponible globalmente
+        window.getCurrentUser = () => currentUser;
 
         // Listener para cambios en el estado de autenticación
         onAuthStateChanged(auth, (user) => {
@@ -1842,11 +1730,133 @@
                 guardarEnLocalStorage(registro);
                 throw error;
             }
-        }// Hacer funciones disponibles globalmente
+        }        // Hacer funciones disponibles globalmente
         window.cargarRegistrosDesdeFirestore = cargarRegistrosDesdeFirestore;
         window.guardarRegistroEnFirestore = guardarRegistroEnFirestore;
         window.guardarInventarioEnFirestore = guardarInventarioEnFirestore;
         window.cargarInventarioDesdeFirestore = cargarInventarioDesdeFirestore;
+
+        // === FUNCIONES DE AUTENTICACIÓN (dentro del módulo) ===
+
+        // Función para mostrar/ocultar pestañas de autenticación
+        window.showAuthTab = function(tabName) {
+            // Ocultar todos los formularios
+            document.querySelectorAll('.auth-form').forEach(form => {
+                form.classList.remove('active');
+            });
+            
+            // Remover clase active de todos los tabs
+            document.querySelectorAll('.auth-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Mostrar el formulario seleccionado
+            document.getElementById(tabName + '-form').classList.add('active');
+            
+            // Activar el tab clickeado
+            event.target.classList.add('active');
+            
+            // Limpiar errores
+            hideAuthError();
+        }
+
+        // Función para mostrar errores de autenticación
+        function showAuthError(message) {
+            const errorDiv = document.getElementById('auth-error');
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+        }
+
+        // Función para ocultar errores de autenticación
+        function hideAuthError() {
+            const errorDiv = document.getElementById('auth-error');
+            errorDiv.classList.add('hidden');
+        }
+
+        // Función para mostrar la aplicación principal
+        function showMainApp() {
+            document.getElementById('auth-overlay').classList.add('hidden');
+            document.getElementById('user-info').classList.remove('hidden');
+            document.getElementById('user-email').textContent = currentUser.email;
+        }
+
+        // Función para mostrar la pantalla de login
+        function showLoginScreen() {
+            document.getElementById('auth-overlay').classList.remove('hidden');
+            document.getElementById('user-info').classList.add('hidden');
+        }
+
+        // Función de registro
+        async function register(email, password, confirmPassword) {
+            if (password !== confirmPassword) {
+                showAuthError('Las contraseñas no coinciden');
+                return;
+            }
+
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                console.log('Usuario registrado:', userCredential.user.email);
+                hideAuthError();
+            } catch (error) {
+                console.error('Error en registro:', error);
+                showAuthError(getAuthErrorMessage(error.code));
+            }
+        }
+
+        // Función de inicio de sesión
+        async function login(email, password) {
+            try {
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                console.log('Usuario autenticado:', userCredential.user.email);
+                hideAuthError();
+            } catch (error) {
+                console.error('Error en login:', error);
+                showAuthError(getAuthErrorMessage(error.code));
+            }
+        }
+
+        // Función de cierre de sesión
+        window.logout = async function() {
+            try {
+                await signOut(auth);
+                console.log('Usuario desconectado');
+            } catch (error) {
+                console.error('Error al cerrar sesión:', error);
+            }
+        }
+
+        // Función para obtener mensajes de error en español
+        function getAuthErrorMessage(errorCode) {
+            const errorMessages = {
+                'auth/user-not-found': 'No existe una cuenta con este correo electrónico',
+                'auth/wrong-password': 'Contraseña incorrecta',
+                'auth/email-already-in-use': 'Ya existe una cuenta con este correo electrónico',
+                'auth/weak-password': 'La contraseña debe tener al menos 6 caracteres',
+                'auth/invalid-email': 'Correo electrónico inválido',
+                'auth/too-many-requests': 'Demasiados intentos fallidos. Intenta más tarde',
+                'auth/network-request-failed': 'Error de conexión. Verifica tu internet'
+            };
+            
+            return errorMessages[errorCode] || 'Error de autenticación: ' + errorCode;
+        }
+
+        // Event listeners para formularios de autenticación
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            await login(email, password);
+        });
+
+        document.getElementById('register-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+            const confirmPassword = document.getElementById('register-password-confirm').value;
+            await register(email, password, confirmPassword);
+        });
+
+        // === FIN FUNCIONES DE AUTENTICACIÓN ===
     </script>
 </body>
 </html>
