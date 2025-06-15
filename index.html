@@ -355,9 +355,114 @@
 
         .tipo-focal {
             color: #856404;
+        }        .tipo-generalizada {
+            color: #721c24;
         }
 
-        .tipo-generalizada {
+        .inventario-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            border-left: 5px solid #17a2b8;
+            transition: all 0.3s ease;
+        }
+
+        .inventario-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .inventario-card.bajo-stock {
+            border-left-color: #dc3545;
+            background: #fff5f5;
+        }
+
+        .inventario-card.sin-stock {
+            border-left-color: #6c757d;
+            background: #f8f9fa;
+            opacity: 0.7;
+        }
+
+        .inventario-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .inventario-nombre {
+            font-weight: 600;
+            color: #343a40;
+            font-size: 1.1rem;
+        }
+
+        .inventario-stock {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stock-cantidad {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #17a2b8;
+        }
+
+        .stock-cantidad.bajo {
+            color: #dc3545;
+        }
+
+        .stock-cantidad.sin {
+            color: #6c757d;
+        }
+
+        .inventario-info {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .inventario-acciones {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 0.9rem;
+            border-radius: 20px;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #28a745, #20c997);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #ffc107, #fd7e14);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545, #e83e8c);
+        }
+
+        .alerta-stock {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alerta-stock.critica {
+            background: #f8d7da;
+            border-color: #f5c6cb;
             color: #721c24;
         }
 
@@ -377,6 +482,16 @@
             .content {
                 padding: 20px;
             }
+
+            .inventario-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .inventario-acciones {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
@@ -388,11 +503,10 @@
             </div>
             <h1>Control Médico</h1>
             <p>Registro de medicamentos y convulsiones</p>
-        </div>
-
-        <div class="tabs">
+        </div>        <div class="tabs">
             <button class="tab active" onclick="showTab('medicamentos')">💊 Medicamentos</button>
             <button class="tab" onclick="showTab('convulsiones')">⚡ Convulsiones</button>
+            <button class="tab" onclick="showTab('inventario')">📦 Inventario</button>
             <button class="tab" onclick="showTab('historial')">📋 Historial</button>
             <button class="tab" onclick="showTab('estadisticas')">📊 Estadísticas</button>
         </div>
@@ -463,6 +577,52 @@
                         </div>
                         <button type="submit" class="btn" style="margin-top: 20px;">Registrar Convulsión</button>
                     </form>
+                </div>            </div>
+
+            <!-- Tab Inventario -->
+            <div id="inventario" class="tab-content">
+                <!-- Alertas de stock -->
+                <div id="alertas-stock"></div>
+
+                <!-- Agregar nuevo medicamento al inventario -->
+                <div class="form-section">
+                    <h3>Agregar Medicamento al Inventario</h3>
+                    <form id="form-inventario">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="nombre-inventario">Nombre del Medicamento</label>
+                                <input type="text" id="nombre-inventario" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="cantidad-inicial">Cantidad Inicial</label>
+                                <input type="number" id="cantidad-inicial" min="0" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="dosis-unitaria">Dosis por Pastilla</label>
+                                <input type="text" id="dosis-unitaria" placeholder="ej: 5mg" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="stock-minimo">Stock Mínimo (Alerta)</label>
+                                <input type="number" id="stock-minimo" min="0" value="10" required>
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-top: 20px;">
+                            <label for="notas-inventario">Notas (opcional)</label>
+                            <textarea id="notas-inventario" placeholder="Información adicional sobre el medicamento..."></textarea>
+                        </div>
+                        <button type="submit" class="btn" style="margin-top: 20px;">Agregar al Inventario</button>
+                    </form>
+                </div>
+
+                <!-- Lista de medicamentos en inventario -->
+                <div class="form-section">
+                    <h3>📦 Inventario de Medicamentos</h3>
+                    <div id="lista-inventario">
+                        <div class="empty-state">
+                            <div style="font-size: 4rem; margin-bottom: 20px; opacity: 0.3;">📦</div>
+                            <p>No hay medicamentos en el inventario. Comienza agregando tus medicamentos.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -538,6 +698,7 @@
     </div>    <script>
         // Datos almacenados en memoria
         let registros = [];
+        let inventario = [];
 
         // Función para actualizar el estado de conexión
         function actualizarEstadoConexion(conectado) {
@@ -570,8 +731,7 @@
             localStorage.setItem('registros-medicos', JSON.stringify(registros));
         }
 
-        // Inicializar fechas actuales
-        document.addEventListener('DOMContentLoaded', function() {
+        // Inicializar fechas actuales        document.addEventListener('DOMContentLoaded', function() {
             const hoy = new Date().toISOString().split('T')[0];
             const ahora = new Date().toTimeString().split(' ')[0].substring(0, 5);
             
@@ -579,6 +739,9 @@
             document.getElementById('fecha-convulsion').value = hoy;
             document.getElementById('hora-medicamento').value = ahora;
             document.getElementById('hora-convulsion').value = ahora;
+            
+            // Cargar inventario
+            cargarInventario();
             
             // Si no hay Firebase disponible, cargar desde localStorage
             if (typeof window.firebaseDB === 'undefined') {
@@ -607,8 +770,10 @@
                 actualizarHistorial();
             } else if (tabName === 'estadisticas') {
                 actualizarEstadisticas();
+            } else if (tabName === 'inventario') {
+                actualizarInventario();
             }
-        }        // Formulario de medicamentos
+        }// Formulario de medicamentos
         document.getElementById('form-medicamento').addEventListener('submit', async function(e) {
             e.preventDefault();
             
@@ -621,8 +786,10 @@
                 notas: document.getElementById('notas-medicamento').value,
                 timestamp: new Date().getTime()
             };
-            
-            try {
+              try {
+                // Descontar del inventario automáticamente
+                descontarDelInventario(registro.nombre, 1);
+                
                 // Intentar guardar en Firestore
                 if (window.guardarRegistroEnFirestore) {
                     const id = await window.guardarRegistroEnFirestore(registro);
@@ -698,6 +865,243 @@
                 alert('Error al guardar la convulsión. Se guardó localmente como respaldo.');
             }
         });
+
+        // === FUNCIONES DEL INVENTARIO ===
+
+        // Formulario de inventario
+        document.getElementById('form-inventario').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const medicamento = {
+                nombre: document.getElementById('nombre-inventario').value,
+                cantidad: parseInt(document.getElementById('cantidad-inicial').value),
+                dosisUnitaria: document.getElementById('dosis-unitaria').value,
+                stockMinimo: parseInt(document.getElementById('stock-minimo').value),
+                notas: document.getElementById('notas-inventario').value,
+                fechaAgregado: new Date().toISOString().split('T')[0],
+                timestamp: new Date().getTime()
+            };
+            
+            // Verificar si ya existe el medicamento
+            const existente = inventario.find(med => med.nombre.toLowerCase() === medicamento.nombre.toLowerCase());
+            if (existente) {
+                if (confirm(`El medicamento "${medicamento.nombre}" ya existe en el inventario. ¿Deseas agregar ${medicamento.cantidad} pastillas al stock existente?`)) {
+                    existente.cantidad += medicamento.cantidad;
+                    await guardarInventario();
+                    actualizarInventario();
+                    alert(`Se agregaron ${medicamento.cantidad} pastillas al stock existente.`);
+                }
+            } else {
+                inventario.push(medicamento);
+                await guardarInventario();
+                actualizarInventario();
+                alert('Medicamento agregado al inventario exitosamente');
+            }
+            
+            // Limpiar formulario
+            this.reset();
+            document.getElementById('stock-minimo').value = '10';
+        });
+
+        // Función para descontar del inventario
+        function descontarDelInventario(nombreMedicamento, cantidad = 1) {
+            const medicamento = inventario.find(med => 
+                med.nombre.toLowerCase() === nombreMedicamento.toLowerCase()
+            );
+            
+            if (medicamento) {
+                if (medicamento.cantidad >= cantidad) {
+                    medicamento.cantidad -= cantidad;
+                    guardarInventario();
+                    console.log(`Descontado ${cantidad} de ${nombreMedicamento}. Stock restante: ${medicamento.cantidad}`);
+                } else {
+                    console.warn(`Stock insuficiente para ${nombreMedicamento}. Stock actual: ${medicamento.cantidad}`);
+                }
+            } else {
+                console.warn(`Medicamento ${nombreMedicamento} no encontrado en inventario`);
+            }
+        }
+
+        // Función para agregar stock
+        async function agregarStock(nombreMedicamento, cantidad) {
+            const medicamento = inventario.find(med => med.nombre === nombreMedicamento);
+            if (medicamento) {
+                const cantidadAgregar = parseInt(prompt(`¿Cuántas pastillas de ${nombreMedicamento} deseas agregar?`, cantidad || 30));
+                if (cantidadAgregar && cantidadAgregar > 0) {
+                    medicamento.cantidad += cantidadAgregar;
+                    await guardarInventario();
+                    actualizarInventario();
+                    alert(`Se agregaron ${cantidadAgregar} pastillas. Nuevo stock: ${medicamento.cantidad}`);
+                }
+            }
+        }
+
+        // Función para editar medicamento
+        async function editarMedicamento(nombreMedicamento) {
+            const medicamento = inventario.find(med => med.nombre === nombreMedicamento);
+            if (!medicamento) return;
+            
+            const nuevoNombre = prompt('Nombre del medicamento:', medicamento.nombre);
+            if (!nuevoNombre) return;
+            
+            const nuevaDosis = prompt('Dosis por pastilla:', medicamento.dosisUnitaria);
+            if (!nuevaDosis) return;
+            
+            const nuevoStockMinimo = parseInt(prompt('Stock mínimo:', medicamento.stockMinimo));
+            if (isNaN(nuevoStockMinimo)) return;
+            
+            const nuevasNotas = prompt('Notas:', medicamento.notas || '');
+            
+            medicamento.nombre = nuevoNombre;
+            medicamento.dosisUnitaria = nuevaDosis;
+            medicamento.stockMinimo = nuevoStockMinimo;
+            medicamento.notas = nuevasNotas;
+            
+            await guardarInventario();
+            actualizarInventario();
+            alert('Medicamento actualizado exitosamente');
+        }
+
+        // Función para eliminar medicamento del inventario
+        async function eliminarMedicamento(nombreMedicamento) {
+            if (confirm(`¿Estás seguro de que deseas eliminar "${nombreMedicamento}" del inventario?`)) {
+                const index = inventario.findIndex(med => med.nombre === nombreMedicamento);
+                if (index !== -1) {
+                    inventario.splice(index, 1);
+                    await guardarInventario();
+                    actualizarInventario();
+                    alert('Medicamento eliminado del inventario');
+                }
+            }
+        }
+
+        // Función para guardar inventario
+        async function guardarInventario() {
+            try {
+                if (window.guardarInventarioEnFirestore) {
+                    await window.guardarInventarioEnFirestore(inventario);
+                } else {
+                    localStorage.setItem('inventario-medico', JSON.stringify(inventario));
+                }
+            } catch (error) {
+                console.error('Error guardando inventario:', error);
+                localStorage.setItem('inventario-medico', JSON.stringify(inventario));
+            }
+        }
+
+        // Función para cargar inventario
+        function cargarInventario() {
+            try {
+                const datosGuardados = localStorage.getItem('inventario-medico');
+                if (datosGuardados) {
+                    inventario = JSON.parse(datosGuardados);
+                    console.log(`Cargados ${inventario.length} medicamentos del inventario`);
+                }
+            } catch (error) {
+                console.error('Error cargando inventario:', error);
+                inventario = [];
+            }
+        }
+
+        // Función para actualizar la interfaz del inventario
+        function actualizarInventario() {
+            const listaInventario = document.getElementById('lista-inventario');
+            const alertasStock = document.getElementById('alertas-stock');
+            
+            // Verificar alertas de stock
+            const medicamentosConStockBajo = inventario.filter(med => med.cantidad <= med.stockMinimo && med.cantidad > 0);
+            const medicamentosSinStock = inventario.filter(med => med.cantidad === 0);
+            
+            // Mostrar alertas
+            let alertasHTML = '';
+            if (medicamentosSinStock.length > 0) {
+                alertasHTML += `
+                    <div class="alerta-stock critica">
+                        <span style="font-size: 1.5rem;">⚠️</span>
+                        <div>
+                            <strong>¡Sin stock!</strong> Los siguientes medicamentos están agotados: 
+                            ${medicamentosSinStock.map(med => med.nombre).join(', ')}
+                        </div>
+                    </div>
+                `;
+            }
+            if (medicamentosConStockBajo.length > 0) {
+                alertasHTML += `
+                    <div class="alerta-stock">
+                        <span style="font-size: 1.5rem;">⚠️</span>
+                        <div>
+                            <strong>Stock bajo!</strong> Es hora de comprar: 
+                            ${medicamentosConStockBajo.map(med => `${med.nombre} (${med.cantidad} restantes)`).join(', ')}
+                        </div>
+                    </div>
+                `;
+            }
+            alertasStock.innerHTML = alertasHTML;
+            
+            // Mostrar lista de inventario
+            if (inventario.length === 0) {
+                listaInventario.innerHTML = `
+                    <div class="empty-state">
+                        <div style="font-size: 4rem; margin-bottom: 20px; opacity: 0.3;">📦</div>
+                        <p>No hay medicamentos en el inventario. Comienza agregando tus medicamentos.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Ordenar por cantidad (primero los que tienen menos stock)
+            const inventarioOrdenado = inventario.sort((a, b) => {
+                if (a.cantidad === 0 && b.cantidad > 0) return -1;
+                if (b.cantidad === 0 && a.cantidad > 0) return 1;
+                if (a.cantidad <= a.stockMinimo && b.cantidad > b.stockMinimo) return -1;
+                if (b.cantidad <= b.stockMinimo && a.cantidad > a.stockMinimo) return 1;
+                return a.cantidad - b.cantidad;
+            });
+            
+            listaInventario.innerHTML = inventarioOrdenado.map(medicamento => {
+                let claseCard = 'inventario-card';
+                let claseStock = 'stock-cantidad';
+                
+                if (medicamento.cantidad === 0) {
+                    claseCard += ' sin-stock';
+                    claseStock += ' sin';
+                } else if (medicamento.cantidad <= medicamento.stockMinimo) {
+                    claseCard += ' bajo-stock';
+                    claseStock += ' bajo';
+                }
+                
+                return `
+                    <div class="${claseCard}">
+                        <div class="inventario-header">
+                            <div class="inventario-nombre">${medicamento.nombre}</div>
+                            <div class="inventario-stock">
+                                <span class="${claseStock}">${medicamento.cantidad}</span>
+                                <span style="color: #6c757d;">pastillas</span>
+                            </div>
+                        </div>
+                        <div class="inventario-info">
+                            <strong>Dosis:</strong> ${medicamento.dosisUnitaria} • 
+                            <strong>Stock mínimo:</strong> ${medicamento.stockMinimo} • 
+                            <strong>Agregado:</strong> ${formatearFecha(medicamento.fechaAgregado)}
+                            ${medicamento.notas ? `<br><em>${medicamento.notas}</em>` : ''}
+                        </div>
+                        <div class="inventario-acciones">
+                            <button class="btn btn-success btn-small" onclick="agregarStock('${medicamento.nombre}')">
+                                ➕ Agregar Stock
+                            </button>
+                            <button class="btn btn-warning btn-small" onclick="editarMedicamento('${medicamento.nombre}')">
+                                ✏️ Editar
+                            </button>
+                            <button class="btn btn-danger btn-small" onclick="eliminarMedicamento('${medicamento.nombre}')">
+                                🗑️ Eliminar
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // === FIN FUNCIONES DEL INVENTARIO ===
 
         function actualizarHistorial() {
             const listaRegistros = document.getElementById('lista-registros');
@@ -932,12 +1336,12 @@
 
     <!-- Firebase SDK -->
     <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { 
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';        import { 
             getFirestore, 
             collection, 
             addDoc, 
             getDocs, 
+            deleteDoc,
             orderBy, 
             query,
             serverTimestamp
@@ -961,10 +1365,12 @@
         window.firebaseDB = db;
         window.firebaseCollections = { collection, addDoc, getDocs, orderBy, query, serverTimestamp };
 
-        // Cargar datos desde Firestore al inicializar
-        window.addEventListener('load', function() {
+        // Cargar datos desde Firestore al inicializar        window.addEventListener('load', function() {
             cargarRegistrosDesdeFirestore();
-        });        // Función para cargar registros desde Firestore
+            cargarInventarioDesdeFirestore();
+        });
+
+        // Función para cargar registros desde Firestore
         async function cargarRegistrosDesdeFirestore() {
             try {
                 const q = query(collection(db, 'registros-medicos'), orderBy('timestamp', 'desc'));
@@ -990,6 +1396,53 @@
                 // Si hay error, continuar con localStorage como respaldo
                 cargarRegistrosDesdeLocalStorage();
             }
+        }        // Función para guardar inventario en Firestore
+        async function guardarInventarioEnFirestore(inventarioData) {
+            try {
+                // Eliminar todos los documentos existentes del inventario
+                const inventarioRef = collection(db, 'inventario-medico');
+                const querySnapshot = await getDocs(inventarioRef);
+                const deletePromises = querySnapshot.docs.map(doc => deleteDoc(doc.ref));
+                await Promise.all(deletePromises);
+                
+                // Guardar nuevo inventario
+                const savePromises = inventarioData.map(medicamento => 
+                    addDoc(inventarioRef, {
+                        ...medicamento,
+                        timestamp: serverTimestamp()
+                    })
+                );
+                await Promise.all(savePromises);
+                
+                console.log('Inventario guardado en Firestore');
+            } catch (error) {
+                console.error('Error guardando inventario en Firestore:', error);
+                throw error;
+            }
+        }
+
+        // Función para cargar inventario desde Firestore
+        async function cargarInventarioDesdeFirestore() {
+            try {
+                const querySnapshot = await getDocs(collection(db, 'inventario-medico'));
+                const inventarioFirestore = [];
+                
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    if (data.timestamp && data.timestamp.toMillis) {
+                        data.timestamp = data.timestamp.toMillis();
+                    }
+                    inventarioFirestore.push({ id: doc.id, ...data });
+                });
+                
+                inventario = inventarioFirestore;
+                console.log(`Cargados ${inventario.length} medicamentos del inventario desde Firestore`);
+                actualizarInventario();
+            } catch (error) {
+                console.error('Error cargando inventario desde Firestore:', error);
+                // Respaldo en localStorage
+                cargarInventario();
+            }
         }
 
         // Función para guardar registro en Firestore
@@ -1007,11 +1460,11 @@
                 guardarEnLocalStorage(registro);
                 throw error;
             }
-        }
-
-        // Hacer funciones disponibles globalmente
+        }        // Hacer funciones disponibles globalmente
         window.cargarRegistrosDesdeFirestore = cargarRegistrosDesdeFirestore;
         window.guardarRegistroEnFirestore = guardarRegistroEnFirestore;
+        window.guardarInventarioEnFirestore = guardarInventarioEnFirestore;
+        window.cargarInventarioDesdeFirestore = cargarInventarioDesdeFirestore;
     </script>
 </body>
 </html>
