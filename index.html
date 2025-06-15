@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control Médico - Medicamentos y Convulsiones</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 20px;
+            text-align: center;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #6c757d;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .tab:hover {
+            background: rgba(79, 172, 254, 0.1);
+            color: #4facfe;
+        }
+
+        .tab.active {
+            color: #4facfe;
+            background: white;
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border-left: 5px solid #4facfe;
+        }
+
+        .form-section h3 {
+            color: #343a40;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        input, select, textarea {
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(79, 172, 254, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .registro-item {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            border-left: 5px solid #28a745;
+            transition: all 0.3s ease;
+        }
+
+        .registro-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .registro-item.convulsion {
+            border-left-color: #dc3545;
+        }
+
+        .registro-fecha {
+            font-weight: 600;
+            color: #4facfe;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+
+        .registro-info {
+            color: #495057;
+            line-height: 1.5;
+        }
+
+        .registro-tipo {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        .focal {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .generalizada {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .medicamento {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            border-top: 4px solid #4facfe;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #4facfe;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            font-weight: 600;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 50px;
+            color: #6c757d;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        @media (max-width: 768px) {
+            .tabs {
+                flex-direction: column;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Control Médico</h1>
+            <p>Registro de medicamentos y convulsiones</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('medicamentos')">💊 Medicamentos</button>
+            <button class="tab" onclick="showTab('convulsiones')">⚡ Convulsiones</button>
+            <button class="tab" onclick="showTab('historial')">📋 Historial</button>
+        </div>
+
+        <div class="content">
+            <!-- Tab Medicamentos -->
+            <div id="medicamentos" class="tab-content active">
+                <div class="form-section">
+                    <h3>Registrar Medicamento</h3>
+                    <form id="form-medicamento">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="nombre-medicamento">Nombre del Medicamento</label>
+                                <input type="text" id="nombre-medicamento" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="dosis">Dosis</label>
+                                <input type="text" id="dosis" placeholder="ej: 5mg" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="hora-medicamento">Hora</label>
+                                <input type="time" id="hora-medicamento" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="fecha-medicamento">Fecha</label>
+                                <input type="date" id="fecha-medicamento" required>
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-top: 20px;">
+                            <label for="notas-medicamento">Notas (opcional)</label>
+                            <textarea id="notas-medicamento" placeholder="Observaciones adicionales..."></textarea>
+                        </div>
+                        <button type="submit" class="btn" style="margin-top: 20px;">Registrar Medicamento</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tab Convulsiones -->
+            <div id="convulsiones" class="tab-content">
+                <div class="form-section">
+                    <h3>Registrar Convulsión</h3>
+                    <form id="form-convulsion">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="tipo-convulsion">Tipo de Convulsión</label>
+                                <select id="tipo-convulsion" required>
+                                    <option value="">Seleccionar tipo</option>
+                                    <option value="focal">Focal</option>
+                                    <option value="generalizada">Generalizada</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="duracion">Duración (minutos)</label>
+                                <input type="number" id="duracion" step="0.1" min="0" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="hora-convulsion">Hora</label>
+                                <input type="time" id="hora-convulsion" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="fecha-convulsion">Fecha</label>
+                                <input type="date" id="fecha-convulsion" required>
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-top: 20px;">
+                            <label for="descripcion">Descripción</label>
+                            <textarea id="descripcion" placeholder="Describe lo que observaste durante la convulsión..." required></textarea>
+                        </div>
+                        <button type="submit" class="btn" style="margin-top: 20px;">Registrar Convulsión</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tab Historial -->
+            <div id="historial" class="tab-content">
+                <div class="stats">
+                    <div class="stat-card">
+                        <div class="stat-number" id="total-medicamentos">0</div>
+                        <div class="stat-label">Medicamentos Registrados</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="total-convulsiones">0</div>
+                        <div class="stat-label">Convulsiones Registradas</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="convulsiones-mes">0</div>
+                        <div class="stat-label">Convulsiones Este Mes</div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Historial de Registros</h3>
+                    <div id="lista-registros">
+                        <div class="empty-state">
+                            <div style="font-size: 4rem; margin-bottom: 20px; opacity: 0.3;">📋</div>
+                            <p>No hay registros aún. Comienza agregando medicamentos o convulsiones.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Datos almacenados en memoria
+        let registros = [];
+
+        // Inicializar fechas actuales
+        document.addEventListener('DOMContentLoaded', function() {
+            const hoy = new Date().toISOString().split('T')[0];
+            const ahora = new Date().toTimeString().split(' ')[0].substring(0, 5);
+            
+            document.getElementById('fecha-medicamento').value = hoy;
+            document.getElementById('fecha-convulsion').value = hoy;
+            document.getElementById('hora-medicamento').value = ahora;
+            document.getElementById('hora-convulsion').value = ahora;
+            
+            actualizarHistorial();
+        });
+
+        function showTab(tabName) {
+            // Ocultar todos los contenidos
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remover clase active de todos los tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Mostrar el contenido seleccionado
+            document.getElementById(tabName).classList.add('active');
+            
+            // Activar el tab clickeado
+            event.target.classList.add('active');
+            
+            if (tabName === 'historial') {
+                actualizarHistorial();
+            }
+        }
+
+        // Formulario de medicamentos
+        document.getElementById('form-medicamento').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const registro = {
+                tipo: 'medicamento',
+                nombre: document.getElementById('nombre-medicamento').value,
+                dosis: document.getElementById('dosis').value,
+                fecha: document.getElementById('fecha-medicamento').value,
+                hora: document.getElementById('hora-medicamento').value,
+                notas: document.getElementById('notas-medicamento').value,
+                timestamp: new Date().getTime()
+            };
+            
+            registros.push(registro);
+            
+            // Limpiar formulario
+            this.reset();
+            const hoy = new Date().toISOString().split('T')[0];
+            const ahora = new Date().toTimeString().split(' ')[0].substring(0, 5);
+            document.getElementById('fecha-medicamento').value = hoy;
+            document.getElementById('hora-medicamento').value = ahora;
+            
+            alert('Medicamento registrado exitosamente');
+        });
+
+        // Formulario de convulsiones
+        document.getElementById('form-convulsion').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const registro = {
+                tipo: 'convulsion',
+                tipoConvulsion: document.getElementById('tipo-convulsion').value,
+                duracion: document.getElementById('duracion').value,
+                fecha: document.getElementById('fecha-convulsion').value,
+                hora: document.getElementById('hora-convulsion').value,
+                descripcion: document.getElementById('descripcion').value,
+                timestamp: new Date().getTime()
+            };
+            
+            registros.push(registro);
+            
+            // Limpiar formulario
+            this.reset();
+            const hoy = new Date().toISOString().split('T')[0];
+            const ahora = new Date().toTimeString().split(' ')[0].substring(0, 5);
+            document.getElementById('fecha-convulsion').value = hoy;
+            document.getElementById('hora-convulsion').value = ahora;
+            
+            alert('Convulsión registrada exitosamente');
+        });
+
+        function actualizarHistorial() {
+            const listaRegistros = document.getElementById('lista-registros');
+            const totalMedicamentos = document.getElementById('total-medicamentos');
+            const totalConvulsiones = document.getElementById('total-convulsiones');
+            const convulsionesMes = document.getElementById('convulsiones-mes');
+            
+            // Ordenar registros por fecha y hora (más recientes primero)
+            const registrosOrdenados = registros.sort((a, b) => {
+                const fechaA = new Date(a.fecha + 'T' + a.hora);
+                const fechaB = new Date(b.fecha + 'T' + b.hora);
+                return fechaB - fechaA;
+            });
+            
+            // Actualizar estadísticas
+            const medicamentos = registros.filter(r => r.tipo === 'medicamento');
+            const convulsiones = registros.filter(r => r.tipo === 'convulsion');
+            
+            const fechaActual = new Date();
+            const mesActual = fechaActual.getMonth();
+            const añoActual = fechaActual.getFullYear();
+            
+            const convulsionesEsteMes = convulsiones.filter(c => {
+                const fechaRegistro = new Date(c.fecha);
+                return fechaRegistro.getMonth() === mesActual && fechaRegistro.getFullYear() === añoActual;
+            });
+            
+            totalMedicamentos.textContent = medicamentos.length;
+            totalConvulsiones.textContent = convulsiones.length;
+            convulsionesMes.textContent = convulsionesEsteMes.length;
+            
+            // Mostrar registros
+            if (registrosOrdenados.length === 0) {
+                listaRegistros.innerHTML = `
+                    <div class="empty-state">
+                        <div style="font-size: 4rem; margin-bottom: 20px; opacity: 0.3;">📋</div>
+                        <p>No hay registros aún. Comienza agregando medicamentos o convulsiones.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            listaRegistros.innerHTML = registrosOrdenados.map(registro => {
+                if (registro.tipo === 'medicamento') {
+                    return `
+                        <div class="registro-item">
+                            <div class="registro-fecha">${formatearFecha(registro.fecha)} - ${registro.hora}</div>
+                            <div class="registro-info">
+                                <strong>${registro.nombre}</strong> - ${registro.dosis}
+                                ${registro.notas ? `<br><em>${registro.notas}</em>` : ''}
+                            </div>
+                            <span class="registro-tipo medicamento">Medicamento</span>
+                        </div>
+                    `;
+                } else {
+                    return `
+                        <div class="registro-item convulsion">
+                            <div class="registro-fecha">${formatearFecha(registro.fecha)} - ${registro.hora}</div>
+                            <div class="registro-info">
+                                <strong>Convulsión ${registro.tipoConvulsion}</strong> - Duración: ${registro.duracion} min
+                                <br>${registro.descripcion}
+                            </div>
+                            <span class="registro-tipo ${registro.tipoConvulsion}">${registro.tipoConvulsion.charAt(0).toUpperCase() + registro.tipoConvulsion.slice(1)}</span>
+                        </div>
+                    `;
+                }
+            }).join('');
+        }
+
+        function formatearFecha(fecha) {
+            const opciones = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            };
+            return new Date(fecha).toLocaleDateString('es-ES', opciones);
+        }
+    </script>
+</body>
+</html>
