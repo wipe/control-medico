@@ -272,6 +272,64 @@
             opacity: 0.3;
         }
 
+        .dia-stat {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 4px solid #4facfe;
+        }
+
+        .dia-info {
+            flex: 1;
+        }
+
+        .dia-fecha {
+            font-weight: 600;
+            color: #343a40;
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+
+        .dia-detalle {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        .dia-numeros {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .dia-numero {
+            text-align: center;
+        }
+
+        .dia-numero-valor {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #4facfe;
+        }
+
+        .dia-numero-label {
+            font-size: 0.8rem;
+            color: #6c757d;
+            font-weight: 600;
+        }
+
+        .tipo-focal {
+            color: #856404;
+        }
+
+        .tipo-generalizada {
+            color: #721c24;
+        }
+
         @media (max-width: 768px) {
             .tabs {
                 flex-direction: column;
@@ -302,6 +360,7 @@
             <button class="tab active" onclick="showTab('medicamentos')">💊 Medicamentos</button>
             <button class="tab" onclick="showTab('convulsiones')">⚡ Convulsiones</button>
             <button class="tab" onclick="showTab('historial')">📋 Historial</button>
+            <button class="tab" onclick="showTab('estadisticas')">📊 Estadísticas</button>
         </div>
 
         <div class="content">
@@ -400,6 +459,47 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Tab Estadísticas -->
+            <div id="estadisticas" class="tab-content">
+                <div class="form-section">
+                    <h3>📊 Convulsiones por Día</h3>
+                    <div id="convulsiones-por-dia">
+                        <div class="empty-state">
+                            <div style="font-size: 4rem; margin-bottom: 20px; opacity: 0.3;">📊</div>
+                            <p>No hay convulsiones registradas para mostrar estadísticas.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>🏷️ Convulsiones por Tipo</h3>
+                    <div class="stats" id="stats-por-tipo">
+                        <div class="stat-card">
+                            <div class="stat-number" id="total-focales">0</div>
+                            <div class="stat-label">Convulsiones Focales</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="total-generalizadas">0</div>
+                            <div class="stat-label">Convulsiones Generalizadas</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="duracion-promedio">0:00</div>
+                            <div class="stat-label">Duración Promedio</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>📅 Resumen de Últimos 30 Días</h3>
+                    <div id="resumen-30-dias">
+                        <div class="empty-state">
+                            <div style="font-size: 4rem; margin-bottom: 20px; opacity: 0.3;">📅</div>
+                            <p>No hay datos suficientes para mostrar el resumen de 30 días.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -439,6 +539,8 @@
             
             if (tabName === 'historial') {
                 actualizarHistorial();
+            } else if (tabName === 'estadisticas') {
+                actualizarEstadisticas();
             }
         }
 
@@ -578,6 +680,159 @@
                 day: 'numeric' 
             };
             return new Date(fecha).toLocaleDateString('es-ES', opciones);
+        }
+
+        function actualizarEstadisticas() {
+            const convulsiones = registros.filter(r => r.tipo === 'convulsion');
+            
+            if (convulsiones.length === 0) {
+                return;
+            }
+            
+            // Actualizar estadísticas por tipo
+            const focales = convulsiones.filter(c => c.tipoConvulsion === 'focal').length;
+            const generalizadas = convulsiones.filter(c => c.tipoConvulsion === 'generalizada').length;
+            
+            document.getElementById('total-focales').textContent = focales;
+            document.getElementById('total-generalizadas').textContent = generalizadas;
+            
+            // Calcular duración promedio
+            const duracionPromedio = calcularDuracionPromedio(convulsiones);
+            document.getElementById('duracion-promedio').textContent = duracionPromedio;
+            
+            // Mostrar convulsiones por día
+            mostrarConvulsionesPorDia(convulsiones);
+            
+            // Mostrar resumen de 30 días
+            mostrarResumen30Dias(convulsiones);
+        }
+
+        function calcularDuracionPromedio(convulsiones) {
+            if (convulsiones.length === 0) return '0:00';
+            
+            let totalSegundos = 0;
+            convulsiones.forEach(c => {
+                const [min, seg] = c.duracion.split(':').map(Number);
+                totalSegundos += (min * 60) + seg;
+            });
+            
+            const promedioSegundos = Math.round(totalSegundos / convulsiones.length);
+            const minutos = Math.floor(promedioSegundos / 60);
+            const segundos = promedioSegundos % 60;
+            
+            return `${minutos}:${segundos.toString().padStart(2, '0')}`;
+        }
+
+        function mostrarConvulsionesPorDia(convulsiones) {
+            const container = document.getElementById('convulsiones-por-dia');
+            
+            // Agrupar por fecha
+            const porDia = {};
+            convulsiones.forEach(c => {
+                const fecha = c.fecha;
+                if (!porDia[fecha]) {
+                    porDia[fecha] = { focal: 0, generalizada: 0, total: 0 };
+                }
+                porDia[fecha][c.tipoConvulsion]++;
+                porDia[fecha].total++;
+            });
+            
+            // Ordenar por fecha (más reciente primero)
+            const fechasOrdenadas = Object.keys(porDia).sort((a, b) => new Date(b) - new Date(a));
+            
+            container.innerHTML = fechasOrdenadas.map(fecha => {
+                const datos = porDia[fecha];
+                return `
+                    <div class="dia-stat">
+                        <div class="dia-info">
+                            <div class="dia-fecha">${formatearFecha(fecha)}</div>
+                            <div class="dia-detalle">
+                                ${datos.focal > 0 ? `${datos.focal} focal${datos.focal > 1 ? 'es' : ''}` : ''}
+                                ${datos.focal > 0 && datos.generalizada > 0 ? ' • ' : ''}
+                                ${datos.generalizada > 0 ? `${datos.generalizada} generalizada${datos.generalizada > 1 ? 's' : ''}` : ''}
+                            </div>
+                        </div>
+                        <div class="dia-numeros">
+                            <div class="dia-numero">
+                                <div class="dia-numero-valor">${datos.total}</div>
+                                <div class="dia-numero-label">Total</div>
+                            </div>
+                            ${datos.focal > 0 ? `
+                                <div class="dia-numero">
+                                    <div class="dia-numero-valor tipo-focal">${datos.focal}</div>
+                                    <div class="dia-numero-label">Focal</div>
+                                </div>
+                            ` : ''}
+                            ${datos.generalizada > 0 ? `
+                                <div class="dia-numero">
+                                    <div class="dia-numero-valor tipo-generalizada">${datos.generalizada}</div>
+                                    <div class="dia-numero-label">General.</div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function mostrarResumen30Dias(convulsiones) {
+            const container = document.getElementById('resumen-30-dias');
+            const fechaActual = new Date();
+            const hace30Dias = new Date(fechaActual);
+            hace30Dias.setDate(hace30Dias.getDate() - 30);
+            
+            const convulsionesRecientes = convulsiones.filter(c => {
+                const fechaConvulsion = new Date(c.fecha);
+                return fechaConvulsion >= hace30Dias;
+            });
+            
+            if (convulsionesRecientes.length === 0) {
+                return;
+            }
+            
+            const focalesRecientes = convulsionesRecientes.filter(c => c.tipoConvulsion === 'focal').length;
+            const generalizadasRecientes = convulsionesRecientes.filter(c => c.tipoConvulsion === 'generalizada').length;
+            const promedioPorDia = (convulsionesRecientes.length / 30).toFixed(1);
+            
+            // Contar días con convulsiones
+            const diasConConvulsiones = new Set(convulsionesRecientes.map(c => c.fecha)).size;
+            
+            container.innerHTML = `
+                <div class="stats">
+                    <div class="stat-card">
+                        <div class="stat-number">${convulsionesRecientes.length}</div>
+                        <div class="stat-label">Total en 30 días</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${promedioPorDia}</div>
+                        <div class="stat-label">Promedio por día</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${diasConConvulsiones}</div>
+                        <div class="stat-label">Días con convulsiones</div>
+                    </div>
+                </div>
+                <div style="margin-top: 20px;">
+                    <div class="dia-stat">
+                        <div class="dia-info">
+                            <div class="dia-fecha">Distribución por tipo (últimos 30 días)</div>
+                            <div class="dia-detalle">
+                                ${focalesRecientes} focales • ${generalizadasRecientes} generalizadas
+                            </div>
+                        </div>
+                        <div class="dia-numeros">
+                            <div class="dia-numero">
+                                <div class="dia-numero-valor tipo-focal">${Math.round((focalesRecientes/convulsionesRecientes.length)*100)}%</div>
+                                <div class="dia-numero-label">Focales</div>
+                            </div>
+                            <div class="dia-numero">
+                                <div class="dia-numero-valor tipo-generalizada">${Math.round((generalizadasRecientes/convulsionesRecientes.length)*100)}%</div>
+                                <div class="dia-numero-label">General.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
     </script>
 </body>
