@@ -25,13 +25,12 @@
             border-radius: 20px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
             overflow: hidden;
-        }
-
-        .header {
+        }        .header {
             background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
             color: white;
             padding: 30px;
             text-align: center;
+            position: relative;
         }
 
         .header h1 {
@@ -43,6 +42,38 @@
         .header p {
             font-size: 1.1rem;
             opacity: 0.9;
+        }
+
+        .connection-status {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #28a745;
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.offline {
+            background: #dc3545;
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
         }
 
         .tabs {
@@ -350,8 +381,11 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
+    <div class="container">        <div class="header">
+            <div class="connection-status" id="connection-status">
+                <div class="status-indicator offline" id="status-indicator"></div>
+                <span id="status-text">Offline</span>
+            </div>
             <h1>Control Médico</h1>
             <p>Registro de medicamentos y convulsiones</p>
         </div>
@@ -501,11 +535,40 @@
                 </div>
             </div>
         </div>
-    </div>
-
-    <script>
+    </div>    <script>
         // Datos almacenados en memoria
         let registros = [];
+
+        // Función para actualizar el estado de conexión
+        function actualizarEstadoConexion(conectado) {
+            const indicator = document.getElementById('status-indicator');
+            const statusText = document.getElementById('status-text');
+            
+            if (conectado) {
+                indicator.classList.remove('offline');
+                statusText.textContent = 'Conectado a Firebase';
+            } else {
+                indicator.classList.add('offline');
+                statusText.textContent = 'Modo Offline';
+            }
+        }
+
+        // Función para cargar desde localStorage como respaldo
+        function cargarRegistrosDesdeLocalStorage() {
+            const datosGuardados = localStorage.getItem('registros-medicos');
+            if (datosGuardados) {
+                registros = JSON.parse(datosGuardados);
+                console.log(`Cargados ${registros.length} registros desde localStorage`);
+            }
+            actualizarHistorial();
+            actualizarEstadisticas();
+        }
+
+        // Función para guardar en localStorage como respaldo
+        function guardarEnLocalStorage(registro) {
+            registros.push(registro);
+            localStorage.setItem('registros-medicos', JSON.stringify(registros));
+        }
 
         // Inicializar fechas actuales
         document.addEventListener('DOMContentLoaded', function() {
@@ -517,7 +580,10 @@
             document.getElementById('hora-medicamento').value = ahora;
             document.getElementById('hora-convulsion').value = ahora;
             
-            actualizarHistorial();
+            // Si no hay Firebase disponible, cargar desde localStorage
+            if (typeof window.firebaseDB === 'undefined') {
+                setTimeout(cargarRegistrosDesdeLocalStorage, 500);
+            }
         });
 
         function showTab(tabName) {
@@ -542,10 +608,8 @@
             } else if (tabName === 'estadisticas') {
                 actualizarEstadisticas();
             }
-        }
-
-        // Formulario de medicamentos
-        document.getElementById('form-medicamento').addEventListener('submit', function(e) {
+        }        // Formulario de medicamentos
+        document.getElementById('form-medicamento').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const registro = {
@@ -558,20 +622,34 @@
                 timestamp: new Date().getTime()
             };
             
-            registros.push(registro);
-            
-            // Limpiar formulario
-            this.reset();
-            const hoy = new Date().toISOString().split('T')[0];
-            const ahora = new Date().toTimeString().split(' ')[0].substring(0, 5);
-            document.getElementById('fecha-medicamento').value = hoy;
-            document.getElementById('hora-medicamento').value = ahora;
-            
-            alert('Medicamento registrado exitosamente');
-        });
-
-        // Formulario de convulsiones
-        document.getElementById('form-convulsion').addEventListener('submit', function(e) {
+            try {
+                // Intentar guardar en Firestore
+                if (window.guardarRegistroEnFirestore) {
+                    const id = await window.guardarRegistroEnFirestore(registro);
+                    registro.id = id;
+                    registros.unshift(registro); // Agregar al inicio (más reciente)
+                } else {
+                    // Respaldo en localStorage
+                    guardarEnLocalStorage(registro);
+                }
+                
+                // Limpiar formulario
+                this.reset();
+                const hoy = new Date().toISOString().split('T')[0];
+                const ahora = new Date().toTimeString().split(' ')[0].substring(0, 5);
+                document.getElementById('fecha-medicamento').value = hoy;
+                document.getElementById('hora-medicamento').value = ahora;
+                
+                // Actualizar la interfaz
+                actualizarHistorial();
+                
+                alert('Medicamento registrado exitosamente');
+            } catch (error) {
+                console.error('Error guardando medicamento:', error);
+                alert('Error al guardar el medicamento. Se guardó localmente como respaldo.');
+            }
+        });        // Formulario de convulsiones
+        document.getElementById('form-convulsion').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const duracionInput = document.getElementById('duracion').value;
@@ -592,16 +670,33 @@
                 timestamp: new Date().getTime()
             };
             
-            registros.push(registro);
-            
-            // Limpiar formulario
-            this.reset();
-            const hoy = new Date().toISOString().split('T')[0];
-            const ahora = new Date().toTimeString().split(' ')[0].substring(0, 5);
-            document.getElementById('fecha-convulsion').value = hoy;
-            document.getElementById('hora-convulsion').value = ahora;
-            
-            alert('Convulsión registrada exitosamente');
+            try {
+                // Intentar guardar en Firestore
+                if (window.guardarRegistroEnFirestore) {
+                    const id = await window.guardarRegistroEnFirestore(registro);
+                    registro.id = id;
+                    registros.unshift(registro); // Agregar al inicio (más reciente)
+                } else {
+                    // Respaldo en localStorage
+                    guardarEnLocalStorage(registro);
+                }
+                
+                // Limpiar formulario
+                this.reset();
+                const hoy = new Date().toISOString().split('T')[0];
+                const ahora = new Date().toTimeString().split(' ')[0].substring(0, 5);
+                document.getElementById('fecha-convulsion').value = hoy;
+                document.getElementById('hora-convulsion').value = ahora;
+                
+                // Actualizar la interfaz
+                actualizarHistorial();
+                actualizarEstadisticas();
+                
+                alert('Convulsión registrada exitosamente');
+            } catch (error) {
+                console.error('Error guardando convulsión:', error);
+                alert('Error al guardar la convulsión. Se guardó localmente como respaldo.');
+            }
         });
 
         function actualizarHistorial() {
@@ -833,7 +928,90 @@
                     </div>
                 </div>
             `;
+        }    </script>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { 
+            getFirestore, 
+            collection, 
+            addDoc, 
+            getDocs, 
+            orderBy, 
+            query,
+            serverTimestamp
+        } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyChtQ5G797PQ_VGmkhgVtSR4pe_Nhr-d30",
+            authDomain: "control-medico-93863.firebaseapp.com",
+            projectId: "control-medico-93863",
+            storageBucket: "control-medico-93863.firebasestorage.app",
+            messagingSenderId: "753860626642",
+            appId: "1:753860626642:web:a7a9ecc3ef927cd72c050b",
+            measurementId: "G-55J089K2WR"
+        };
+
+        // Inicializar Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Hacer las funciones de Firebase disponibles globalmente
+        window.firebaseDB = db;
+        window.firebaseCollections = { collection, addDoc, getDocs, orderBy, query, serverTimestamp };
+
+        // Cargar datos desde Firestore al inicializar
+        window.addEventListener('load', function() {
+            cargarRegistrosDesdeFirestore();
+        });        // Función para cargar registros desde Firestore
+        async function cargarRegistrosDesdeFirestore() {
+            try {
+                const q = query(collection(db, 'registros-medicos'), orderBy('timestamp', 'desc'));
+                const querySnapshot = await getDocs(q);
+                
+                registros = [];
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    // Convertir timestamp de Firestore a número si existe
+                    if (data.timestamp && data.timestamp.toMillis) {
+                        data.timestamp = data.timestamp.toMillis();
+                    }
+                    registros.push({ id: doc.id, ...data });
+                });
+                
+                console.log(`Cargados ${registros.length} registros desde Firestore`);
+                actualizarEstadoConexion(true);
+                actualizarHistorial();
+                actualizarEstadisticas();
+            } catch (error) {
+                console.error('Error cargando registros desde Firestore:', error);
+                actualizarEstadoConexion(false);
+                // Si hay error, continuar con localStorage como respaldo
+                cargarRegistrosDesdeLocalStorage();
+            }
         }
+
+        // Función para guardar registro en Firestore
+        async function guardarRegistroEnFirestore(registro) {
+            try {
+                const docRef = await addDoc(collection(db, 'registros-medicos'), {
+                    ...registro,
+                    timestamp: serverTimestamp()
+                });
+                console.log('Registro guardado en Firestore con ID:', docRef.id);
+                return docRef.id;
+            } catch (error) {
+                console.error('Error guardando en Firestore:', error);
+                // Respaldo en localStorage si falla Firestore
+                guardarEnLocalStorage(registro);
+                throw error;
+            }
+        }
+
+        // Hacer funciones disponibles globalmente
+        window.cargarRegistrosDesdeFirestore = cargarRegistrosDesdeFirestore;
+        window.guardarRegistroEnFirestore = guardarRegistroEnFirestore;
     </script>
 </body>
 </html>
